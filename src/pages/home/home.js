@@ -1,23 +1,21 @@
 import React from 'react';
-import {bindAll, uniqBy, forIn} from 'lodash';
+import {bindAll, uniqBy, values, orderBy} from 'lodash';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
-import moment from 'moment';
+import {utc} from 'moment';
 import ReactHighcharts from 'react-highcharts/ReactHighstock';
 import HighchartsExporting from 'highcharts-exporting';
 
 import bugs from '../home/bugs_for_test.json';
 import './styles.less';
 
-HighchartsExporting(ReactHighcharts.Highcharts);
-
 class HomePage extends React.Component {
     static path = '/';
 
     constructor(props) {
         super(props);
-        bindAll(this, ['onChangeSystem', 'onChangeCrit', 'handleData']);
+        HighchartsExporting(ReactHighcharts.Highcharts);
+        bindAll(this, ['onChange', 'handleData']);
         this.state = {
-            bugList: bugs,
             data: [],
             System: '',
             Критичность: ''
@@ -25,70 +23,42 @@ class HomePage extends React.Component {
     }
 
     componentWillMount() {
-        this.handleData(bugs);
+        this.handleData();
     }
 
-    handleData(bugList) {
-        const data = {};
+    onChange(e) {
+        const {name, value} = e.target;
+        this.setState({[name]: value}, () => {
+            const bugList = bugs.filter(bug => {
+                return (bug['Критичность'].toLowerCase().indexOf(this.state['Критичность'].toLowerCase()) >= 0) &&
+                    (bug['System'].toLowerCase().indexOf(this.state['System'].toLowerCase()) >= 0);
+            });
+
+            this.handleData(bugList);
+        });
+    }
+
+    handleData(bugList = bugs) {
+        const data = [];
         bugList
-            .map((item) => {
-                return {
-                    time: moment(item['Дата создания']).utc().valueOf(),
-                    System: item['System'],
-                    Критичность: item['Критичность']
-                };
-            })
-            .sort((a, b) => {
-                const c = a.time;
-                const d = b.time;
-                return c - d;
-            })
-            .map(item => {
-                const date = item.time;
-                if (data[date]) {
-                    data[date].y++;
+            .map(item => Date.parse(item['Дата создания']))
+            .sort((a, b) => a - b)
+            .map(utcTime => {
+                if (data[utcTime]) {
+                    data[utcTime].y++;
                 } else {
-                    data[date] = {
-                        x: date,
-                        y: 1,
-                        System: item['System'],
-                        Критичность: item['Критичность']
+                    data[utcTime] = {
+                        x: utcTime,
+                        y: 1
                     };
                 }
             });
+
         this.setState({data});
     }
 
-    onChangeCrit(e) {
-        const {name, value} = e.target;
-        this.setState({[name]: value});
-
-        const bugList = bugs.filter(bug => {
-            return (bug['Критичность'].toLowerCase().indexOf(value.toLowerCase()) >= 0) &&
-                (bug['System'].toLowerCase().indexOf(this.state['System'].toLowerCase()) >= 0);
-        });
-
-        this.handleData(bugList);
-    }
-
-    onChangeSystem(e) {
-        const {name, value} = e.target;
-        this.setState({[name]: value});
-
-        const bugList = bugs.filter(bug => {
-            return (bug['System'].toLowerCase().indexOf(value.toLowerCase()) >= 0) &&
-                (bug['Критичность'].toLowerCase().indexOf(this.state['Критичность'].toLowerCase()) >= 0);
-        });
-
-        this.handleData(bugList);
-    }
-
     render() {
-        const data = [];
-        forIn(this.state.data, function(val) {
-            data.push([val.x, val.y]);
-        });
-
+        const {data} = this.state;
         const config = {
             chart: {
                 type: 'line',
@@ -106,16 +76,24 @@ class HomePage extends React.Component {
             },
             tooltip: {
                 formatter: function() {
-                    return `<div>
-                                <b>${moment.utc(Number(this.x)).format('DD.MM.gggg')}</b>
-                            </div><br>
-                            <div>Ошибок: <b>${this.y}</b></div>`;
+                    const {x, y} = this;
+                    return `
+                        <div>
+                            <div>
+                                <b>${utc(Number(x)).format('DD.MM.gggg')}</b>
+                            </div>
+                            <br/>
+                            <div>
+                                Ошибок: <b>${y}</b>
+                            </div>
+                        </div>
+                    `;
                 }
             },
             series: [{
-                turboThreshold: this.state.data.length,
+                turboThreshold: data.length,
                 name: 'Ошибки',
-                data: data
+                data: values(data)
             }]
         };
 
@@ -123,31 +101,33 @@ class HomePage extends React.Component {
             <section id="HomePage">
                 <h1 className="title">Главная</h1>
 
-                <FormGroup controlId="formControlsSelect">
+                <FormGroup controlId="formControlsSystem">
                     <ControlLabel>System</ControlLabel>
                     <FormControl
                         name="System"
                         componentClass="select"
-                        onChange={this.onChangeSystem}
+                        onChange={this.onChange}
                     >
                         <option value="">Выберете систему</option>
-                        {uniqBy(bugs, 'System').map((item, i) => (
-                            <option key={i} value={item.System}>{item.System}</option>
-                        ))}
+                        {uniqBy(bugs, 'System').map(function(bug, i) {
+                            const sys = bug['System'];
+                            return (<option key={i} value={sys}>{sys}</option>);
+                        })}
                     </FormControl>
                 </FormGroup>
 
-                <FormGroup controlId="formControlsSelect">
+                <FormGroup controlId="formControlsCrit">
                     <ControlLabel>Критичность</ControlLabel>
                     <FormControl
                         name="Критичность"
                         componentClass="select"
-                        onChange={this.onChangeCrit}
+                        onChange={this.onChange}
                     >
                         <option value="">Выберете Критичность</option>
-                        {uniqBy(bugs, 'Критичность').map((item, i) => (
-                            <option key={i} value={item.Критичность}>{item.Критичность}</option>
-                        ))}
+                        {uniqBy(bugs, 'Критичность').map(function(bug, i) {
+                            const critic = bug['Критичность'];
+                            return (<option key={i} value={critic}>{critic}</option>);
+                        })}
                     </FormControl>
                 </FormGroup>
 

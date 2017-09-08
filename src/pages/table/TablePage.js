@@ -1,5 +1,5 @@
 import React from 'react';
-import {has} from 'lodash';
+import {has, uniqBy} from 'lodash';
 
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
@@ -19,10 +19,8 @@ class TablePage extends React.Component {
 
     getSelect(name) {
         const list = {};
-        bugs.map((item) => {
-            if ( !has(list, item[name]) ) {
-                list[item[name]] = item[name];
-            }
+        uniqBy(bugs, name).map((bug) => {
+            list[bug[name]] = bug[name];
         });
         return list;
     }
