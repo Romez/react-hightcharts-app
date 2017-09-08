@@ -1,7 +1,7 @@
 import React from 'react';
-import {bindAll, uniqBy, forIn, get} from 'lodash';
+import {bindAll, uniqBy, forIn} from 'lodash';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
-import moment  from 'moment';
+import moment from 'moment';
 import ReactHighcharts from 'react-highcharts/ReactHighstock';
 import HighchartsExporting from 'highcharts-exporting';
 
@@ -89,14 +89,11 @@ class HomePage extends React.Component {
             data.push([val.x, val.y]);
         });
 
-        const std = this.state.data;
-
         const config = {
             chart: {
                 type: 'line',
                 zoomType: 'x'
             },
-
             xAxis: {
                 type: 'datetime',
                 labels: {
@@ -110,17 +107,15 @@ class HomePage extends React.Component {
             tooltip: {
                 formatter: function() {
                     return `<div>
-                            <b>${moment.utc(Number(this.x)).format('DD.MM.gggg')}</b></div><br>
-                            <div>
-                            Ошибок: <b>${this.y}</b></div>
-                            `;
+                                <b>${moment.utc(Number(this.x)).format('DD.MM.gggg')}</b>
+                            </div><br>
+                            <div>Ошибок: <b>${this.y}</b></div>`;
                 }
             },
             series: [{
                 turboThreshold: this.state.data.length,
                 name: 'Ошибки',
-                data: data,
-                dateFormat: 'dd/mm/YYYY'
+                data: data
             }]
         };
 

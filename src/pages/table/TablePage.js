@@ -1,13 +1,11 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import {connect} from 'react-redux';
 import {has} from 'lodash';
 
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
+import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
 
-import './styles.less';
 import bugs from '../home/bugs_for_test.json';
+import './styles.less';
 
 class TablePage extends React.Component {
     static path = '/table';
@@ -38,7 +36,6 @@ class TablePage extends React.Component {
                     data={this.state.rows}
                     pagination
                 >
-
                     <TableHeaderColumn
                         dataField="ID"
                         isKey={true}
@@ -111,22 +108,10 @@ class TablePage extends React.Component {
                         dataSort={true}
                         filter={{type: 'SelectFilter', options: this.getSelect('reopens_amount')}}
                     >reopens_amount</TableHeaderColumn>
-
                 </BootstrapTable>
             </section>
         );
     }
 }
 
-TablePage.propTypes = {
-    home: PropTypes.object.isRequired
-};
-
-
-function mapStateToProps(state) {
-    return {
-        home: state.home
-    };
-}
-
-export default connect(mapStateToProps)(TablePage);
+export default TablePage;
