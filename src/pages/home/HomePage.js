@@ -1,9 +1,10 @@
 import React from 'react';
-import {bindAll, uniqBy, values, orderBy} from 'lodash';
-import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
+import {bindAll, values} from 'lodash';
 import {utc} from 'moment';
 import ReactHighcharts from 'react-highcharts/ReactHighstock';
 import HighchartsExporting from 'highcharts-exporting';
+
+import FilterButtons from './FilterButtons';
 
 import bugs from '../home/bugs_for_test.json';
 import './styles.less';
@@ -26,8 +27,7 @@ class HomePage extends React.Component {
         this.handleData();
     }
 
-    onChange(e) {
-        const {name, value} = e.target;
+    onChange(name, value) {
         this.setState({[name]: value}, () => {
             const bugList = bugs.filter(bug => {
                 return (bug['Критичность'].toLowerCase().indexOf(this.state['Критичность'].toLowerCase()) >= 0) &&
@@ -101,35 +101,10 @@ class HomePage extends React.Component {
             <section id="HomePage">
                 <h1 className="title">Главная</h1>
 
-                <FormGroup controlId="formControlsSystem">
-                    <ControlLabel>System</ControlLabel>
-                    <FormControl
-                        name="System"
-                        componentClass="select"
-                        onChange={this.onChange}
-                    >
-                        <option value="">Выберете систему</option>
-                        {uniqBy(bugs, 'System').map(function(bug, i) {
-                            const sys = bug['System'];
-                            return (<option key={i} value={sys}>{sys}</option>);
-                        })}
-                    </FormControl>
-                </FormGroup>
-
-                <FormGroup controlId="formControlsCrit">
-                    <ControlLabel>Критичность</ControlLabel>
-                    <FormControl
-                        name="Критичность"
-                        componentClass="select"
-                        onChange={this.onChange}
-                    >
-                        <option value="">Выберете Критичность</option>
-                        {uniqBy(bugs, 'Критичность').map(function(bug, i) {
-                            const critic = bug['Критичность'];
-                            return (<option key={i} value={critic}>{critic}</option>);
-                        })}
-                    </FormControl>
-                </FormGroup>
+                <FilterButtons
+                    bugs={bugs}
+                    onChange={this.onChange}
+                />
 
                 <ReactHighcharts config={config}/>
             </section>
